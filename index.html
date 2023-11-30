@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebGazer Eye Tracking com Estilo Iceberg</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+    <style>
+        /* Estilos CSS existentes */
+        @font-face {
+            font-family: 'MyCustomFont';
+            src: url('path/to/your-font.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            color: white;
+            font-family: 'MyCustomFont', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .image-container {
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+
+        h1 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            transition: text-shadow 0.3s ease;
+        }
+
+        h1:hover {
+            text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.7);
+        }
+
+        #status {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            color: green;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+
+        /* Estilos adicionais para os pontos de calibração */
+        .calibration-point {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: blue;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <img src="https://uploaddeimagens.com.br/images/004/677/169/original/iceberg.jpg?1701255060" alt="Imagem de Iceberg">
+        <canvas id="canvas"></canvas>
+        <h1>Boom! You're on fire! 🔥 (◕‿◕) </h1>
+        <div id="status">Calibrando... Por favor, olhe para a tela.</div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('canvas');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // Configuração inicial do WebGazer.js
+            webgazer.setGazeListener(function(data, elapsedTime) {
+                if (data == null) {
+                    return;
+                }
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                const x = (data.x / window.innerWidth) * canvas.width;
+                const y = (data.y / window.innerHeight) * canvas.height;
+                ctx.arc(x, y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+
+                const status = document.getElementById('status');
+            status.textContent = `Olhando para as coordenadas: X ${data.x.toFixed(2)}, Y ${data.y.toFixed(2)}`;
+        }).begin();
+
+        webgazer.showVideoPreview(true).showPredictionPoints(true);
+
+        // Função para criar pontos de calibração
+        function createCalibrationPoint(x, y) {
+            const point = document.createElement('div');
+            point.classList.add('calibration-point');
+            point.style.left = x + 'px';
+            point.style.top = y + 'px';
+            point.onclick = function() {
+                // Ação quando o ponto de calibração é clicado
+                point.style.display = 'none';
+                // Adicione aqui qualquer lógica adicional necessária para a calibração
+            };
+            document.body.appendChild(point);
+        }
+
+        // Iniciar o processo de calibração
+        function startCalibration() {
+            // Definindo pontos de calibração na tela
+            const calibrationPoints = [
+                { x: 100, y: 100 },
+                { x: window.innerWidth - 100, y: 100 },
+                { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+                { x: 100, y: window.innerHeight - 100 },
+                { x: window.innerWidth - 100, y: window.innerHeight - 100 }
+                // Adicione mais pontos conforme necessário
+            ];
+
+            calibrationPoints.forEach(point => {
+                createCalibrationPoint(point.x, point.y);
+            });
+        }
+
+        // Chamar função de calibração ao carregar a página
+        startCalibration();
+
+        // Limpar o WebGazer ao sair da página
+        window.onbeforeunload = function() {
+            webgazer.end();
+        };
+    };
+</script>
